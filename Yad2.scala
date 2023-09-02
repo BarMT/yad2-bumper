@@ -14,18 +14,13 @@ import java.time.{Duration, Instant, ZoneId, ZonedDateTime}
 
 
 val backend = CurlBackend()
-val logfile = "yad2.log"
+
+val defaultSleep = 7200000L //2 hours
 
 val PATTERN_FORMAT = "dd.MM.yyyy HH:mm:SS"
 val formatter = DateTimeFormatter.ofPattern(PATTERN_FORMAT)
 val localZone = ZoneId.of("Asia/Jerusalem")
 
-val bw = BufferedWriter(
-    FileWriter(
-        File(logfile),
-        true
-    )
-)
 
 /**
  * This script will continuously bump all of the user's ads on Yad2.co.il second hand market
@@ -52,11 +47,15 @@ val bw = BufferedWriter(
     val items = getAllItems(authCookie)
     log(s"queried ${items.size} items")
 
-    val nextBumpAt = items.map(itemId => promoteItem(itemId, authCookie)).max
-    log(s"bumped ${items.size} items. next bump at: ${formatter.format(nextBumpAt)}")
+    if (items.isEmpty)
+      log(s"Nothing to bump. sleeping.")
+      Thread.sleep(defaultSleep)
+    else 
+      val nextBumpAt = items.map(itemId => promoteItem(itemId, authCookie)).max
+      log(s"bumped ${items.size} items. next bump at: ${formatter.format(nextBumpAt)}")
 
-    val timeNow = Instant.now.atZone(localZone)
-    Thread.sleep(Duration.between(timeNow, nextBumpAt).toMillis)
+      val timeNow = Instant.now.atZone(localZone)
+      Thread.sleep(Duration.between(timeNow, nextBumpAt).toMillis)
   }
 
 def login(email: String, pass: String): Response[String] =
