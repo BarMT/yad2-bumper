@@ -10,6 +10,7 @@ import sttp.client4.Response
 
 import java.time.format.DateTimeFormatter
 import java.time.{Duration, Instant, ZoneId, ZonedDateTime}
+import java.io.{FileWriter, BufferedWriter, File}
 
 
 
@@ -17,7 +18,7 @@ val backend = CurlBackend()
 
 val defaultSleep = 7200000L //2 hours
 
-val PATTERN_FORMAT = "dd.MM.yyyy HH:mm:SS"
+val PATTERN_FORMAT = "dd.MM.yyyy HH:mm:ss"
 val formatter = DateTimeFormatter.ofPattern(PATTERN_FORMAT)
 val localZone = ZoneId.of("Asia/Jerusalem")
 
@@ -39,7 +40,7 @@ val localZone = ZoneId.of("Asia/Jerusalem")
   while (true) {
     val authCookie = login(email, pass)
     if (!authCookie.code.isSuccess)
-      println("login failed.")
+      log("login failed.")
       System.exit(1)
 
     log("logged in")
@@ -90,5 +91,16 @@ def promoteItem(itemId: Long, authCookie: Response[_]): ZonedDateTime =
   val dateTxt = ujson.read(response.body)("data")("allowManualPromotionAfter").str
   Instant.parse(dateTxt).atZone(localZone)
 
+def openLogFile = BufferedWriter(
+    FileWriter(
+        File("yad2.log"),
+        true
+    )
+)
+
 def log(msg: String): Unit =
-  println(s"${formatter.format(Instant.now.atZone(localZone))} - $msg")
+  val str = s"${formatter.format(Instant.now.atZone(localZone))} - $msg\n"
+  print(str)
+  val bw = openLogFile
+  bw.write(str)
+  bw.close()

@@ -1,3 +1,4 @@
 .bsp/
 .vscode/
 .scala-build/
+*.log
