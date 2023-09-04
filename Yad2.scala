@@ -13,6 +13,9 @@ import java.io.{FileWriter, BufferedWriter, File}
 
 
 val defaultSleep = 7200000L //2 hours
+val graceSeconds = 5
+
+val logFile = os.pwd / "yad2.log"
 
 val PATTERN_FORMAT = "dd.MM.yyyy HH:mm:ss"
 val formatter = DateTimeFormatter.ofPattern(PATTERN_FORMAT)
@@ -52,7 +55,7 @@ val localZone = ZoneId.of("Asia/Jerusalem")
       log(s"bumped ${items.size} items. next bump at: ${formatter.format(nextBumpAt)}")
 
       val timeNow = Instant.now.atZone(localZone)
-      Thread.sleep(Duration.between(timeNow, nextBumpAt).toMillis)
+      Thread.sleep(Duration.between(timeNow, nextBumpAt.plusSeconds(graceSeconds)).toMillis)
   }
 
 def login(email: String, pass: String): Response[String] =
@@ -87,16 +90,8 @@ def promoteItem(itemId: Long, authCookie: Response[_]): ZonedDateTime =
   val dateTxt = ujson.read(response.body)("data")("allowManualPromotionAfter").str
   Instant.parse(dateTxt).atZone(localZone)
 
-def openLogFile = BufferedWriter(
-    FileWriter(
-        File("yad2.log"),
-        true
-    )
-)
-
 def log(msg: String): Unit =
   val str = s"${formatter.format(Instant.now.atZone(localZone))} - $msg\n"
   print(str)
-  val bw = openLogFile
-  bw.write(str)
-  bw.close()
+  os.write.append(logFile, str)
+  

@@ -1,4 +1,5 @@
 .bsp/
 .vscode/
 .scala-build/
+.metals/
 *.log
