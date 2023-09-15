@@ -55,7 +55,7 @@ val localZone = ZoneId.of("Asia/Jerusalem")
       log(s"bumped ${items.size} items. next bump at: ${formatter.format(nextBumpAt)}")
 
       val timeNow = Instant.now.atZone(localZone)
-      Thread.sleep(Duration.between(timeNow, nextBumpAt.plusSeconds(graceSeconds)).toMillis)
+      Thread.sleep(Math.abs(Duration.between(timeNow, nextBumpAt.plusSeconds(graceSeconds)).toMillis))
   }
 
 def login(email: String, pass: String): Response[String] =
